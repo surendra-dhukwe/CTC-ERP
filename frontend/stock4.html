@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title id="stock4PageTitle">SKYZONE TO BK (IN)</title>
+    <link rel="stylesheet" href="css/style.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+
+<body id="stock4Page" class="stock-page stock4-page">
+
+<div class="page stock-container" id="stock4Container">
+
+<h2 id="stock4Heading" class="stock-heading">📦 SKYZONE TO BK (IN)</h2>
+
+<div class="options stock-options" id="stock4Options">
+
+<!-- ✅ DISPATCH -->
+<button 
+    class="dispatchBtn dispatch-btn stock-dispatch-btn" 
+    id="stock4DispatchBtn" 
+    onclick="openDispatch()">
+    🚚 Dispatch Entry
+</button>
+
+<!-- ✅ RECEIVE -->
+<button 
+    class="receiveBtn receive-btn stock-receive-btn" 
+    id="stock4ReceiveBtn" 
+    onclick="openReceive()">
+    📥 Receive Entry
+</button>
+
+</div>
+
+<br>
+
+<button 
+    class="backBtn back-btn stock-back-btn" 
+    id="stock4BackBtn" 
+    onclick="goHome()">
+    ⬅ Back
+</button>
+
+</div>
+
+<script>
+
+/* ================= SET STOCK ================= */
+localStorage.setItem("stock","stock4");
+
+/* ================= NAVIGATION ================= */
+function openDispatch(){
+    localStorage.setItem("type","dispatch");
+    window.location.href="stock4-dispatch.html";
+}
+
+function openReceive(){
+    localStorage.setItem("type","receive");
+    window.location.href="stock4-receive.html";
+}
+
+function goHome(){
+    window.location.href="dashboard.html";
+}
+
+</script>
+
+</body>
+</html>

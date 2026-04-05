@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+<title>Stock Transactions Report</title>
+<link rel="stylesheet" href="css/style.css">
+
+<style>
+.filters{
+    display:flex;
+    gap:10px;
+    justify-content:center;
+    margin-bottom:10px;
+    flex-wrap:wrap;
+}
+
+.filters input, .filters button{
+    padding:6px;
+    border-radius:5px;
+    border:none;
+}
+
+.summary{
+    text-align:center;
+    margin:10px;
+    font-weight:bold;
+}
+
+.loader{
+    text-align:center;
+    display:none;
+}
+
+.stockBox{
+    margin:30px 0;
+}
+</style>
+
+</head>
+
+<body class="report-page">
+
+<h2 class="page-heading">Stock Transactions Report (All Stocks)</h2>
+
+<!-- FILTERS -->
+<div class="filters">
+    <input type="date" id="fromDate">
+    <input type="date" id="toDate">
+    <input type="text" id="searchInput" placeholder="Search..." onkeyup="filterAll()">
+
+    <button onclick="loadAllStocks()">Filter</button>
+</div>
+
+<div class="loader" id="loader">Loading...</div>
+
+<!-- STOCK 1 -->
+<div class="stockBox">
+<h3>Stock 1</h3>
+<div class="summary">Total: <span id="total1">0</span></div>
+<table>
+<thead>
+<tr>
+<th>Code</th><th>Name</th><th>Qty</th><th>Type</th><th>Date</th>
+</tr>
+</thead>
+<tbody id="body1"></tbody>
+</table>
+</div>
+
+<!-- STOCK 2 -->
+<div class="stockBox">
+<h3>Stock 2</h3>
+<div class="summary">Total: <span id="total2">0</span></div>
+<table>
+<thead>
+<tr>
+<th>Code</th><th>Name</th><th>Qty</th><th>Type</th><th>Date</th>
+</tr>
+</thead>
+<tbody id="body2"></tbody>
+</table>
+</div>
+
+<!-- STOCK 3 -->
+<div class="stockBox">
+<h3>Stock 3</h3>
+<div class="summary">Total: <span id="total3">0</span></div>
+<table>
+<thead>
+<tr>
+<th>Code</th><th>Name</th><th>Qty</th><th>Type</th><th>Date</th>
+</tr>
+</thead>
+<tbody id="body3"></tbody>
+</table>
+</div>
+
+<!-- STOCK 4 -->
+<div class="stockBox">
+<h3>Stock 4</h3>
+<div class="summary">Total: <span id="total4">0</span></div>
+<table>
+<thead>
+<tr>
+<th>Code</th><th>Name</th><th>Qty</th><th>Type</th><th>Date</th>
+</tr>
+</thead>
+<tbody id="body4"></tbody>
+</table>
+</div>
+
+<script>
+
+let stockData = {
+    stock1: [],
+    stock2: [],
+    stock3: [],
+    stock4: []
+};
+
+/* ================= LOAD ALL ================= */
+async function loadAllStocks(){
+
+    const from=document.getElementById("fromDate").value;
+    const to=document.getElementById("toDate").value;
+
+    document.getElementById("loader").style.display="block";
+
+    const stocks=["stock1","stock2","stock3","stock4"];
+
+    for(let s of stocks){
+        try{
+            let url=`http://localhost:3000/transactions/all-transactions/${s}`;
+
+            if(from && to){
+                url+=`?from=${from}&to=${to}`;
+            }
+
+            const res=await fetch(url);
+            const data=await res.json();
+
+            stockData[s]=data;
+            renderTable(s,data);
+
+        }catch{
+            alert("Server Error");
+        }
+    }
+
+    document.getElementById("loader").style.display="none";
+}
+
+/* ================= RENDER ================= */
+function renderTable(stock,data){
+
+    const body=document.getElementById("body"+stock.slice(-1));
+    body.innerHTML="";
+
+    let total=0;
+
+    if(data.length===0){
+        body.innerHTML=`<tr><td colspan="5">No Data</td></tr>`;
+        document.getElementById("total"+stock.slice(-1)).innerText=0;
+        return;
+    }
+
+    data.forEach(item=>{
+        total += Number(item.total_quantity || 0);
+
+        body.innerHTML+=`
+        <tr>
+            <td>${item.code||""}</td>
+            <td>${item.name||""}</td>
+            <td>${item.total_quantity}</td>
+            <td style="color:${item.type==='dispatch'?'red':'green'}">${item.type}</td>
+            <td>${new Date(item.entry_date).toLocaleString()}</td>
+        </tr>`;
+    });
+
+    document.getElementById("total"+stock.slice(-1)).innerText=total;
+}
+
+/* ================= SEARCH ALL ================= */
+function filterAll(){
+
+    const text=document.getElementById("searchInput").value.toLowerCase();
+
+    Object.keys(stockData).forEach(stock=>{
+        const filtered = stockData[stock].filter(item =>
+            (item.code||"").toLowerCase().includes(text) ||
+            (item.name||"").toLowerCase().includes(text) ||
+            (item.type||"").toLowerCase().includes(text) ||
+            (item.total_quantity+"").includes(text)
+        );
+
+        renderTable(stock,filtered);
+    });
+}
+
+/* ================= INIT ================= */
+window.onload=loadAllStocks;
+
+</script>
+
+</body>
+</html>

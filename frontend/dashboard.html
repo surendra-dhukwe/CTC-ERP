@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Stock ERP Dashboard</title>
+
+  <style>
+    /* ===== BODY ===== */
+    body {
+      margin: 0;
+      font-family: "Segoe UI", Arial, sans-serif;
+      background: radial-gradient(circle at top left, #1f2a44, #0f172a);
+      color: white;
+    }
+
+    /* ===== TOP BAR ===== */
+    .topbar {
+      height: 55px;
+      background: #111827;
+      display: flex;
+      align-items: center;
+      padding: 0 15px;
+    }
+
+    .menu-btn {
+      font-size: 22px;
+      cursor: pointer;
+      margin-right: 15px;
+    }
+
+    .topbar h3 {
+      flex: 1;
+    }
+
+    .topbar .logoutBtn {
+      padding: 8px 16px;
+      background: #dc2626;
+      border: none;
+      color: white;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: 0.3s;
+    }
+
+    .topbar .logoutBtn:hover {
+      background: #b91c1c;
+      transform: scale(1.05);
+    }
+
+    /* ===== LAYOUT ===== */
+    .container {
+      display: flex;
+    }
+
+    /* ===== SIDEBAR ===== */
+    .sidebar {
+      width: 230px;
+      background: #111827;
+      min-height: 100vh;
+      padding: 20px;
+      transition: 0.3s;
+    }
+
+    .sidebar.hide {
+      margin-left: -230px;
+    }
+
+    .sidebar h3 {
+      margin-bottom: 25px;
+    }
+
+    .sidebar button {
+      width: 100%;
+      padding: 10px;
+      margin: 6px 0;
+      border: none;
+      background: #374151;
+      color: white;
+      cursor: pointer;
+      border-radius: 6px;
+      font-size: 14px;
+      text-align: left;
+    }
+
+    .sidebar button:hover {
+      background: #4b5563;
+    }
+
+    .submenu {
+      display: none;
+      padding-left: 12px;
+    }
+
+    /* ===== MAIN ===== */
+    .main {
+      flex: 1;
+      padding: 25px;
+    }
+
+    /* ===== SUMMARY CARDS ===== */
+    .summary {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 20px;
+      margin-top: 20px;
+    }
+
+    .summary-card {
+      background: #111827;
+      padding: 20px;
+      border-radius: 10px;
+      text-align: center;
+      transition: transform 0.2s, box-shadow 0.3s;
+    }
+
+    .summary-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+    }
+
+    .summary-card h2 {
+      margin: 10px 0;
+    }
+
+    /* ===== DASHBOARD CARDS ===== */
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 20px;
+      margin-top: 20px;
+    }
+
+    .card {
+      background: rgba(255, 255, 255, 0.15);
+      padding: 30px;
+      border-radius: 15px;
+      text-align: center;
+      backdrop-filter: blur(10px);
+      transition: transform 0.2s, box-shadow 0.3s;
+    }
+
+    .card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+    }
+
+    .card button {
+      margin-top: 10px;
+      padding: 8px 14px;
+      border: none;
+      background: #2563eb;
+      color: white;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    .card button:hover {
+      background: #1e40af;
+    }
+
+    /* ===== COMBINED STOCK BUTTON ===== */
+    .combined-btn {
+      margin-top: 25px;
+      padding: 12px 20px;
+      border: none;
+      border-radius: 8px;
+      background: #2563eb;
+      color: white;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    .combined-btn:hover {
+      background: #1e40af;
+    }
+
+    /* ===== LOGOUT POPUP ===== */
+    .confirm-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.6);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 999;
+    }
+
+    .confirm-box {
+      background: #1f2937;
+      padding: 25px;
+      border-radius: 10px;
+      text-align: center;
+      width: 300px;
+      color: white;
+      animation: fadePop 0.3s ease;
+    }
+
+    .confirm-box h3 {
+      margin-bottom: 10px;
+    }
+
+    .confirm-box p {
+      margin-bottom: 20px;
+      color: #ccc;
+    }
+
+    .confirm-buttons {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+    }
+
+    .cancelBtn {
+      padding: 8px 16px;
+      border: none;
+      background: #6b7280;
+      color: white;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    .confirmBtn {
+      padding: 8px 16px;
+      border: none;
+      background: #ef4444;
+      color: white;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    @keyframes fadePop {
+      from {
+        opacity: 0;
+        transform: scale(.8);
+      }
+
+      to {
+        opacity: 1;
+        transform: scale(1);
+      }
+    }
+
+    /* ===== RESPONSIVE ===== */
+    @media (max-width: 600px) {
+      .container {
+        flex-direction: column;
+      }
+
+      .sidebar {
+        width: 100%;
+        margin-left: 0 !important;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- TOP BAR -->
+  <div class="topbar">
+    <span class="menu-btn" onclick="toggleMenu()">☰</span>
+    <h3>Stock ERP Dashboard</h3>
+    <button onclick="openLogoutConfirm()" class="logoutBtn">Logout</button>
+  </div>
+
+  <div class="container">
+
+    <!-- SIDEBAR -->
+    <div class="sidebar" id="sidebar">
+      <h3>Stock ERP</h3>
+      <button onclick="openPage('dashboard.html')">Dashboard</button>
+      <button onclick="toggleStockMenu()">Stock Entry▼</button>
+      <div id="stockMenu" class="submenu">
+        <button onclick="openPage('stock1.html')">BK TO PACO (OUT)</button>
+        <button onclick="openPage('stock2.html')">PACO TO BK (IN)</button>
+        <button onclick="openPage('stock3.html')">CTC TO BK (IN)</button>
+        <button onclick="openPage('stock4.html')">SKYZONE TO BK(IN)</button>
+      </div>
+      <button onclick="openPage('products.html')">Products</button>
+      <button onclick="openPage('stock-report.html')">Stock Report</button>
+    </div>
+
+    <!-- MAIN -->
+    <div class="main">
+      <h2>Dashboard</h2>
+
+      <!-- SUMMARY CARDS -->
+      <div class="summary">
+        <div class="summary-card">
+          <h4>Total Stock1</h4>
+          <h2 id="s1">0</h2>
+        </div>
+        <div class="summary-card">
+          <h4>Total Stock2</h4>
+          <h2 id="s2">0</h2>
+        </div>
+        <div class="summary-card">
+          <h4>Difference</h4>
+          <h2 id="diff">0</h2>
+        </div>
+      </div>
+
+      <!-- DASHBOARD CARDS -->
+      <div class="cards">
+        <div class="card">
+          <h3>BK TO PACO (OUT)</h3>
+          <button onclick="openPage('stock1.html')">Open</button>
+        </div>
+        <div class="card">
+          <h3>PACO TO BK (IN)</h3>
+          <button onclick="openPage('stock2.html')">Open</button>
+        </div>
+        <div class="card">
+          <h3>CTC TO BK (IN)</h3>
+          <button onclick="openPage('stock3.html')">Open</button>
+        </div>
+        <div class="card">
+          <h3>SKYZONE TO BK (IN)</h3>
+          <button onclick="openPage('stock4.html')">Open</button>
+        </div>
+        <div class="card">
+          <h3>Products</h3>
+          <button onclick="openPage('products.html')">Open</button>
+        </div>
+        <div class="card">
+          <h3>Reports</h3>
+          <button onclick="openPage('stock-report.html')">Open</button>
+        </div>
+      </div>
+
+      <!-- COMBINED STOCK BUTTON -->
+      <button class="combined-btn" onclick="openPage('combined-stock.html')">Open Combined Stock Page</button>
+
+    </div>
+  </div>
+
+  <!-- LOGOUT POPUP -->
+  <div id="logoutConfirmBox" class="confirm-overlay">
+    <div class="confirm-box">
+      <h3>Confirm Logout</h3>
+      <p>Are you sure?</p>
+      <div class="confirm-buttons">
+        <button class="cancelBtn" onclick="closeLogoutConfirm()">Cancel</button>
+        <button class="confirmBtn" onclick="logout()">Logout</button>
+      </div>
+    </div>
+  </div>
+
+<script>
+const BASE_URL = "http://localhost:3000";
+
+// SIDEBAR
+function toggleMenu() {
+  document.getElementById("sidebar").classList.toggle("hide");
+}
+function toggleStockMenu() {
+  let m = document.getElementById("stockMenu");
+  m.style.display = m.style.display === "block" ? "none" : "block";
+}
+function openPage(p) {
+  window.location = p;
+}
+
+// LOGOUT
+function openLogoutConfirm() {
+  document.getElementById("logoutConfirmBox").style.display = "flex";
+}
+function closeLogoutConfirm() {
+  document.getElementById("logoutConfirmBox").style.display = "none";
+}
+function logout() {
+  window.location = "index.html";
+}
+
+/* ================= DASHBOARD FIXED ================= */
+async function loadDashboard() {
+  try {
+    const res = await fetch(`${BASE_URL}/combined-stock`);
+
+    // 🔥 SERVER ERROR HANDLE
+    if (!res.ok) {
+      throw new Error("Server Error: " + res.status);
+    }
+
+    const data = await res.json();
+
+    // 🔥 DATA VALIDATION
+    if (!Array.isArray(data)) {
+      console.error("Invalid Data:", data);
+      throw new Error("Data format incorrect");
+    }
+
+    let s1 = 0, s2 = 0;
+
+    data.forEach(i => {
+      s1 += Number(i.stock1 || 0);
+      s2 += Number(i.stock2 || 0);
+    });
+
+    document.getElementById("s1").innerText = s1;
+    document.getElementById("s2").innerText = s2;
+    document.getElementById("diff").innerText = s1 - s2;
+
+  } catch (err) {
+    console.error("Dashboard Error:", err);
+
+    // UI fallback
+    document.getElementById("s1").innerText = "0";
+    document.getElementById("s2").innerText = "0";
+    document.getElementById("diff").innerText = "0";
+  }
+}
+
+/* ================= AUTO REFRESH ================= */
+setInterval(loadDashboard, 5000);
+loadDashboard();
+
+/* ================= DOWNLOAD ================= */
+function downloadStock(stock) {
+  fetch(`${BASE_URL}/final-stock/${stock}/download`)
+    .then(res => {
+      if (!res.ok) throw new Error("Download failed");
+      return res.blob();
+    })
+    .then(blob => {
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${stock}_final_stock.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+    })
+    .catch(err => {
+      console.error(err);
+      alert("Download failed");
+    });
+}
+</script>
+
+</body>
+
+</html>
