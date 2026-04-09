@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Stock Transactions Report</title>
+
+<style>
+/* ===== GLOBAL ===== */
+body{
+    font-family:"Segoe UI",sans-serif;
+    background:#f4f6f9;
+    margin:0;
+    text-align:center;
+}
+
+/* ===== HEADING ===== */
+h2{
+    background:#2c3e50;
+    color:white;
+    padding:15px;
+    margin:0;
+}
+
+/* ===== STOCK BUTTONS ===== */
+.stockButtons{margin:15px;}
+.stockButtons button{
+    margin:5px;
+    padding:10px 18px;
+    border:none;
+    border-radius:6px;
+    background:#bdc3c7;
+    cursor:pointer;
+    font-weight:bold;
+}
+.stockButtons button.active{
+    background:#3498db;
+    color:white;
+}
+
+/* ===== FILTER ===== */
+.filters{
+    display:flex;
+    gap:10px;
+    justify-content:center;
+    flex-wrap:wrap;
+    margin:10px;
+}
+.filters input{
+    padding:8px;
+    border:1px solid #ccc;
+    border-radius:5px;
+}
+.filters button{
+    padding:8px 15px;
+    border:none;
+    border-radius:5px;
+    cursor:pointer;
+    background:#27ae60;
+    color:white;
+}
+
+/* ===== SEARCH ===== */
+#searchInput{
+    margin:10px;
+    padding:8px;
+    width:250px;
+    border-radius:5px;
+    border:1px solid #ccc;
+}
+
+/* ===== TABLE ===== */
+table{
+    width:95%;
+    margin:15px auto;
+    border-collapse:collapse;
+    background:white;
+    box-shadow:0 2px 8px rgba(0,0,0,0.1);
+}
+th{
+    background:#34495e;
+    color:white;
+    padding:10px;
+    cursor:pointer;
+}
+td{
+    padding:8px;
+    border-bottom:1px solid #eee;
+}
+tr:hover{background:#f2f2f2;}
+
+/* ===== SUMMARY ===== */
+.summary{
+    font-size:18px;
+    font-weight:bold;
+    margin:10px;
+}
+
+/* ===== LOADER ===== */
+.loader{
+    display:none;
+    margin:10px;
+    font-weight:bold;
+}
+
+/* ===== EMPTY ===== */
+.empty{
+    padding:15px;
+    color:#999;
+}
+
+/* ===== MESSAGE BOX ===== */
+#msgBox{
+    position:fixed;
+    top:20px;
+    right:20px;
+    padding:10px 15px;
+    color:#fff;
+    border-radius:6px;
+    display:none;
+}
+</style>
+</head>
+
+<body>
+
+<h2>📊 Stock Transactions Report</h2>
+
+<div id="msgBox"></div>
+
+<!-- STOCK -->
+<div class="stockButtons">
+    <button onclick="setStock(this,'stock1')" class="active">Stock 1</button>
+    <button onclick="setStock(this,'stock2')">Stock 2</button>
+    <button onclick="setStock(this,'stock3')">Stock 3</button>
+    <button onclick="setStock(this,'stock4')">Stock 4</button>
+</div>
+
+<!-- FILTER -->
+<div class="filters">
+    <input type="date" id="fromDate">
+    <input type="date" id="toDate">
+    <input type="text" id="partyInput" placeholder="Party Name">
+    <input type="text" id="invoiceInput" placeholder="Invoice No">
+
+    <button onclick="loadTransactions()">Filter</button>
+    <button onclick="downloadReport()">Download</button>
+</div>
+
+<input type="text" id="searchInput" placeholder="🔍 Search..." onkeyup="filterTable()">
+
+<div class="loader" id="loader">⏳ Loading...</div>
+
+<div class="summary">
+Total Quantity: <span id="totalQty">0</span>
+</div>
+
+<table>
+<thead>
+<tr>
+<th onclick="sortTable(0)">Code</th>
+<th onclick="sortTable(1)">Name</th>
+<th onclick="sortTable(2)">Qty</th>
+<th onclick="sortTable(3)">Type</th>
+<th onclick="sortTable(4)">Date</th>
+</tr>
+</thead>
+<tbody id="tableBody"></tbody>
+</table>
+
+<script>
+
+let currentStock="stock1";
+let allData=[];
+
+/* ===== MESSAGE ===== */
+function showMessage(msg,success=true){
+    const box=document.getElementById("msgBox");
+    box.style.display="block";
+    box.style.background=success?"#28a745":"#dc3545";
+    box.innerText=msg;
+    setTimeout(()=>box.style.display="none",3000);
+}
+
+/* ===== SET STOCK ===== */
+function setStock(btn,stock){
+    currentStock=stock;
+
+    document.querySelectorAll(".stockButtons button")
+        .forEach(b=>b.classList.remove("active"));
+
+    btn.classList.add("active");
+
+    loadTransactions();
+}
+
+/* ===== LOAD DATA ===== */
+async function loadTransactions(){
+
+    const from=document.getElementById("fromDate").value;
+    const to=document.getElementById("toDate").value;
+    const party=document.getElementById("partyInput").value;
+    const invoice=document.getElementById("invoiceInput").value;
+
+    document.getElementById("loader").style.display="block";
+
+    try{
+
+        let url=`http://localhost:3000/transactions/${currentStock}/all`;
+        let params=[];
+
+        if(from && to) params.push(`from=${from}`,`to=${to}`);
+        if(party) params.push(`party=${party}`);
+        if(invoice) params.push(`invoice=${invoice}`);
+
+        if(params.length>0){
+            url+="?"+params.join("&");
+        }
+
+        const res=await fetch(url);
+
+        if(!res.ok) throw new Error("API Error");
+
+        const result=await res.json();
+
+        // 🔥 MAIN FIX (important)
+        allData = result.data || result || [];
+
+        showTable(allData);
+
+    }catch(err){
+        console.log(err);
+        showMessage("Backend error / route issue",false);
+    }
+
+    document.getElementById("loader").style.display="none";
+}
+
+/* ===== SHOW TABLE ===== */
+function showTable(data){
+
+    const table=document.getElementById("tableBody");
+    table.innerHTML="";
+
+    let total=0;
+
+    if(!data || data.length===0){
+        table.innerHTML=`<tr><td colspan="5" class="empty">No Data Found</td></tr>`;
+        document.getElementById("totalQty").innerText=0;
+        return;
+    }
+
+    data.forEach(item=>{
+
+        // 🔥 FIX (multiple backend formats support)
+        const qty = item.total_quantity || item.quantity || item.qty || 0;
+
+        total += Number(qty);
+
+        table.innerHTML+=`
+        <tr>
+            <td>${item.code || "-"}</td>
+            <td>${item.name || "-"}</td>
+            <td>${qty}</td>
+            <td style="color:${item.type==='dispatch'?'red':'green'}">
+                ${item.type || "-"}
+            </td>
+            <td>${item.entry_date ? new Date(item.entry_date).toLocaleString() : "-"}</td>
+        </tr>`;
+    });
+
+    document.getElementById("totalQty").innerText=total;
+}
+
+/* ===== SEARCH ===== */
+function filterTable(){
+    const text=document.getElementById("searchInput").value.toLowerCase();
+
+    const filtered=allData.filter(item =>
+        (item.code || "").toLowerCase().includes(text) ||
+        (item.name || "").toLowerCase().includes(text) ||
+        (item.type || "").toLowerCase().includes(text)
+    );
+
+    showTable(filtered);
+}
+
+/* ===== SORT ===== */
+function sortTable(n){
+    const rows=Array.from(document.querySelectorAll("tbody tr"));
+
+    rows.sort((a,b)=>{
+        return a.cells[n].innerText.localeCompare(
+            b.cells[n].innerText,
+            undefined,
+            {numeric:true}
+        );
+    });
+
+    const tbody=document.getElementById("tableBody");
+    tbody.innerHTML="";
+    rows.forEach(r=>tbody.appendChild(r));
+}
+
+/* ===== DOWNLOAD ===== */
+function downloadReport(){
+    window.open(`http://localhost:3000/export/${currentStock}`);
+}
+
+/* ===== INIT ===== */
+window.onload=loadTransactions;
+
+</script>
+
+</body>
+</html>

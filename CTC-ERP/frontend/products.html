@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Products Manager</title>
+
+<style>
+body{
+    font-family:Segoe UI;
+    background: linear-gradient(135deg,#0f172a,#1e293b);
+    color:white;
+    padding:20px;
+}
+
+/* HEADING */
+h2{
+    text-align:center;
+    margin-bottom:20px;
+    letter-spacing:1px;
+}
+
+/* BOX */
+.box{
+    background:rgba(30,41,59,0.9);
+    padding:15px;
+    border-radius:12px;
+    margin-bottom:20px;
+    box-shadow:0 5px 15px rgba(0,0,0,0.3);
+}
+
+/* MENU */
+.menu{
+    text-align:center;
+    position:relative;
+}
+
+.menu button{
+    background:#2563eb;
+    padding:10px 18px;
+    border:none;
+    border-radius:8px;
+    color:white;
+    cursor:pointer;
+    font-weight:600;
+    transition:0.3s;
+}
+
+.menu button:hover{
+    background:#1e40af;
+    transform:scale(1.05);
+}
+
+/* DROPDOWN */
+.menu-options{
+    display:none;
+    margin-top:12px;
+    animation:fadeIn 0.3s ease;
+}
+
+.menu-options button{
+    margin:5px;
+    padding:6px 12px;
+    border:none;
+    border-radius:6px;
+    cursor:pointer;
+    color:white;
+}
+
+.add{background:#22c55e;}
+.update{background:#f59e0b;}
+.delete{background:#ef4444;}
+
+.menu-options button:hover{
+    opacity:0.8;
+}
+
+/* FORM */
+.formBox{
+    display:none;
+    margin-top:10px;
+    animation:fadeIn 0.3s ease;
+}
+
+/* INPUT */
+input{
+    padding:8px 10px;
+    margin:5px;
+    border:none;
+    border-radius:6px;
+    outline:none;
+}
+
+/* TABLE */
+table{
+    width:100%;
+    border-collapse:collapse;
+}
+th,td{
+    padding:10px;
+}
+th{
+    background:#334155;
+}
+tr:nth-child(even){
+    background:#1e293b;
+}
+tr:hover{
+    background:#334155;
+}
+
+/* SEARCH */
+.searchBox{
+    text-align:center;
+}
+.searchBox input{
+    width:300px;
+}
+
+/* EXTRA */
+.loader{
+    text-align:center;
+    display:none;
+}
+
+.pagination{
+    text-align:center;
+    margin-top:10px;
+}
+
+.pagination button{
+    padding:5px 10px;
+    margin:2px;
+    border:none;
+    background:#2563eb;
+    color:white;
+    border-radius:5px;
+    cursor:pointer;
+}
+
+/* ANIMATION */
+@keyframes fadeIn{
+    from{opacity:0; transform:translateY(10px);}
+    to{opacity:1; transform:translateY(0);}
+}
+</style>
+
+</head>
+
+<body>
+
+<h2>Products Manager</h2>
+
+<!-- MENU -->
+<div class="box menu">
+<button onclick="toggleMenu()">⚙ Manage Products</button>
+
+<div id="menuOptions" class="menu-options">
+
+    <button class="add" onclick="showForm('addForm')">Add</button>
+    <button class="update" onclick="showForm('updateForm')">Update</button>
+    <button class="delete" onclick="showForm('deleteForm')">Delete</button>
+
+    <!-- ADD -->
+    <div id="addForm" class="formBox">
+        <input id="add_code" placeholder="CPP Code">
+        <input id="add_name" placeholder="Name">
+        <input id="add_loose" placeholder="Loose Code">
+        <button class="add" onclick="addProduct()">Add Product</button>
+    </div>
+
+    <!-- UPDATE -->
+    <div id="updateForm" class="formBox">
+        <input id="up_code" placeholder="CPP Code">
+        <input id="up_name" placeholder="New Name">
+        <input id="up_loose" placeholder="New Loose Code">
+        <button class="update" onclick="updateProduct()">Update Product</button>
+    </div>
+
+    <!-- DELETE -->
+    <div id="deleteForm" class="formBox">
+        <input id="del_code" placeholder="CPP Code">
+        <button class="delete" onclick="deleteProduct()">Delete Product</button>
+    </div>
+
+</div>
+</div>
+
+<!-- SEARCH -->
+<div class="box searchBox">
+<h3>Search Product</h3>
+<input id="searchInput" placeholder="Search Code / Name / Loose Code">
+<p>Total: <span id="totalCount">0</span></p>
+</div>
+
+<div class="loader" id="loader">Loading...</div>
+
+<!-- TABLE -->
+<div class="box">
+<h3>All Products</h3>
+<table>
+<thead>
+<tr>
+<th>CPP Code</th>
+<th>Name</th>
+<th>Loose Code</th>
+</tr>
+</thead>
+<tbody id="table"></tbody>
+</table>
+
+<div class="pagination">
+<button onclick="prevPage()">Prev</button>
+<span id="pageInfo"></span>
+<button onclick="nextPage()">Next</button>
+</div>
+
+</div>
+
+<script>
+
+let allProducts=[];
+let currentPage=1;
+let limit=20;
+let searchText="";
+let totalProducts=0;
+
+/* MENU */
+function toggleMenu(){
+    const menu=document.getElementById("menuOptions");
+    menu.style.display = menu.style.display==="block"?"none":"block";
+    if(menu.style.display==="none") hideAllForms();
+}
+
+function showForm(id){
+    hideAllForms();
+    document.getElementById(id).style.display="block";
+}
+
+function hideAllForms(){
+    document.querySelectorAll(".formBox").forEach(f=>f.style.display="none");
+}
+
+/* ================= LOAD PRODUCTS (🔥 FIXED) ================= */
+/* ================= LOAD PRODUCTS (FINAL HYBRID FIX) ================= */
+async function loadProducts(){
+    document.getElementById("loader").style.display="block";
+
+    try{
+        // 🔥 1. TABLE KE LIYE (PAGINATION SAME RAHEGA)
+        const res = await fetch(`http://localhost:3000/products?search=${searchText}&page=${currentPage}&limit=${limit}`);
+        const data = await res.json();
+
+        allProducts = data.data || [];
+        totalProducts = data.total || 0;
+
+        showTable(allProducts);
+
+        document.getElementById("totalCount").innerText = totalProducts;
+
+        const totalPages = Math.ceil(totalProducts / limit) || 1;
+        document.getElementById("pageInfo").innerText = `Page ${currentPage} / ${totalPages}`;
+
+
+        // 🔥 2. AUTOFILL / SUGGESTION KE LIYE (ALL DATA LOAD)
+        const resAll = await fetch(`http://localhost:3000/products/all`);
+        const fullData = await resAll.json();
+
+        // global use ke liye (entry page me bhi kaam aayega)
+        window.fullProducts = fullData || [];
+
+        console.log("FULL PRODUCTS:", window.fullProducts.length); // debug
+
+    }catch(err){
+        alert("Error loading products");
+        console.log(err);
+    }
+
+    document.getElementById("loader").style.display="none";
+}
+
+/* ================= TABLE ================= */
+function showTable(data){
+    const table=document.getElementById("table");
+    table.innerHTML="";
+
+    if(!data || data.length===0){
+        table.innerHTML=`<tr><td colspan="3">No Data</td></tr>`;
+        return;
+    }
+
+    data.forEach(p=>{
+        table.innerHTML+=`
+        <tr>
+            <td>${p.code || ""}</td>
+            <td>${p.name || ""}</td>
+            <td>${p.loose_code || ""}</td>
+        </tr>`;
+    });
+}
+
+/* ================= SEARCH (debounce) ================= */
+let timer;
+document.getElementById("searchInput").addEventListener("input",function(){
+    clearTimeout(timer);
+    timer=setTimeout(()=>{
+        searchText=this.value;
+        currentPage=1;
+        loadProducts();
+    },400);
+});
+
+/* ================= PAGINATION ================= */
+function nextPage(){
+    const totalPages = Math.ceil(totalProducts / limit);
+
+    if(currentPage < totalPages){
+        currentPage++;
+        loadProducts();
+    }
+}
+
+function prevPage(){
+    if(currentPage>1){
+        currentPage--;
+        loadProducts();
+    }
+}
+
+/* ================= ADD ================= */
+function addProduct(){
+    const code=document.getElementById("add_code").value.trim();
+    const name=document.getElementById("add_name").value.trim();
+    const loose_code=document.getElementById("add_loose").value.trim();
+
+    if(!name){ alert("Name required"); return; }
+
+    fetch("http://localhost:3000/products",{
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({code,name,loose_code})
+    })
+    .then(()=>{ 
+        alert("✅ Added"); 
+        loadProducts(); 
+    });
+}
+
+/* ================= UPDATE ================= */
+function updateProduct(){
+    const cpp_code=document.getElementById("up_code").value.trim();
+    const name=document.getElementById("up_name").value.trim();
+    const loose_code=document.getElementById("up_loose").value.trim();
+
+    if(!cpp_code){
+        alert("Code required");
+        return;
+    }
+
+    fetch("http://localhost:3000/products",{
+        method:"PUT",
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({cpp_code,name,loose_code})
+    })
+    .then(()=>{ 
+        alert("✅ Updated"); 
+        loadProducts(); 
+    });
+}
+
+/* ================= DELETE ================= */
+function deleteProduct(){
+    const cpp_code=document.getElementById("del_code").value.trim();
+
+    if(!cpp_code){
+        alert("Code required");
+        return;
+    }
+
+    if(!confirm("Delete?")) return;
+
+    fetch(`http://localhost:3000/products/${cpp_code}`,{
+        method:"DELETE"
+    })
+    .then(()=>{ 
+        alert("✅ Deleted"); 
+        loadProducts(); 
+    });
+}
+
+/* ================= INIT ================= */
+loadProducts();
+
+</script>
+
+</body>
+</html>

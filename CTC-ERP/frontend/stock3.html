@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title id="stock3PageTitle">CTC TO BK (IN)</title>
+    <link rel="stylesheet" href="css/style.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+
+<body id="stock3Page" class="stock-page stock3-page">
+
+<div class="page stock-container" id="stock3Container">
+
+<h2 id="stock3Heading" class="stock-heading">📦 CTC TO BK (IN)</h2>
+
+<div class="options stock-options" id="stock3Options">
+
+<!-- ✅ DISPATCH -->
+<button 
+    class="dispatchBtn dispatch-btn stock-dispatch-btn" 
+    id="stock3DispatchBtn" 
+    onclick="openDispatch()">
+    🚚 Dispatch Entry
+</button>
+
+<!-- ✅ RECEIVE -->
+<button 
+    class="receiveBtn receive-btn stock-receive-btn" 
+    id="stock3ReceiveBtn" 
+    onclick="openReceive()">
+    📥 Receive Entry
+</button>
+
+</div>
+
+<br>
+
+<button 
+    class="backBtn back-btn stock-back-btn" 
+    id="stock3BackBtn" 
+    onclick="goHome()">
+    ⬅ Back
+</button>
+
+</div>
+
+<script>
+
+/* ================= SET STOCK ================= */
+localStorage.setItem("stock","stock3");
+
+/* ================= NAVIGATION ================= */
+function openDispatch(){
+    localStorage.setItem("type","dispatch");
+    window.location.href="stock3-dispatch.html";
+}
+
+function openReceive(){
+    localStorage.setItem("type","receive");
+    window.location.href="stock3-receive.html";
+}
+
+function goHome(){
+    window.location.href="dashboard.html";
+}
+
+</script>
+
+</body>
+</html>

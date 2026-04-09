@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stock ERP Login</title>
+
+    <link rel="stylesheet" href="css/style.css">
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: radial-gradient(circle at top left, #1f2a44, #0f172a);
+            color: white;
+        }
+
+        .login-box {
+            width: 360px;
+            padding: 35px;
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(12px);
+            border-radius: 12px;
+            box-shadow: 0 12px 35px rgba(0, 0, 0, 0.5);
+            text-align: center;
+            animation: fadeIn 0.6s ease;
+        }
+
+        .login-box h2 {
+            margin-bottom: 25px;
+            font-weight: 600;
+            letter-spacing: 1px;
+            color: #f1f5f9;
+        }
+
+        .login-box input {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 15px;
+            border: none;
+            outline: none;
+            border-radius: 6px;
+            background: rgba(255, 255, 255, 0.12);
+            color: white;
+            font-size: 14px;
+            transition: background 0.3s, transform 0.2s;
+        }
+
+        .login-box input::placeholder {
+            color: #ddd;
+        }
+
+        .login-box input:focus {
+            background: rgba(255, 255, 255, 0.25);
+            transform: scale(1.02);
+        }
+
+        .captcha-box {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        #captchaText {
+            flex: 1;
+            background: #111827;
+            padding: 10px;
+            border-radius: 6px;
+            font-weight: bold;
+            letter-spacing: 3px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            user-select: none;
+            font-size: 18px;
+        }
+
+        .refreshBtn {
+            background: #2563eb;
+            border: none;
+            border-radius: 6px;
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+            padding: 10px 15px;
+            transition: background 0.3s;
+        }
+
+        .refreshBtn:hover {
+            background: #1d4ed8;
+        }
+
+        .loginBtn {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 6px;
+            background: #22c55e;
+            color: white;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s, transform 0.2s;
+        }
+
+        .loginBtn:hover {
+            background: #16a34a;
+            transform: scale(1.02);
+        }
+
+        #msgBox {
+            margin-top: 12px;
+            padding: 10px;
+            border-radius: 6px;
+            font-size: 14px;
+            display: none;
+            word-break: break-word;
+        }
+
+        .msg-error {
+            background: #dc2626;
+        }
+
+        .msg-success {
+            background: #16a34a;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Responsive tweaks */
+        @media (max-width: 400px) {
+            .login-box {
+                width: 90%;
+                padding: 25px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="login-box">
+        <h2>Stock ERP Login</h2>
+
+        <input type="text" id="username" placeholder="Username" autocomplete="username">
+        <input type="password" id="password" placeholder="Password" autocomplete="current-password">
+
+        <div class="captcha-box">
+            <div id="captchaText"></div>
+            <button onclick="generateCaptcha()" class="refreshBtn" title="Refresh Captcha">↻</button>
+        </div>
+
+        <input type="text" id="captchaInput" placeholder="Enter Captcha">
+
+        <button onclick="login()" class="loginBtn">Login</button>
+
+        <div id="msgBox"></div>
+    </div>
+
+    <script>
+        /* ================= CAPTCHA GENERATE ================= */
+        let captcha = "";
+
+        function generateCaptcha() {
+            // Avoid confusing chars: O,0,I,1
+            const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+            captcha = "";
+            for (let i = 0; i < 5; i++) {
+                captcha += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            document.getElementById("captchaText").innerText = captcha;
+        }
+
+        generateCaptcha();
+
+        /* ================= MESSAGE ================= */
+        function showMessage(msg, type) {
+            const box = document.getElementById("msgBox");
+            box.innerText = msg;
+            box.className = "";
+            box.style.display = "block";
+            if (type === "error") box.classList.add("msg-error");
+            if (type === "success") box.classList.add("msg-success");
+        }
+
+        /* ================= LOGIN ================= */
+        function login() {
+            const username = document.getElementById("username").value.trim();
+            const password = document.getElementById("password").value.trim();
+            const captchaInput = document.getElementById("captchaInput").value.trim().toUpperCase();
+
+            // CAPTCHA CHECK (CASE INSENSITIVE)
+            if (captchaInput !== captcha) {
+                showMessage("❌ Captcha Incorrect", "error");
+                generateCaptcha();
+                return;
+            }
+
+            // LOGIN CHECK (You can replace with backend API later)
+            if (username === "Admin" && password === "Admin@123") {
+                showMessage("✅ Login Successful", "success");
+                setTimeout(() => window.location = "dashboard.html", 800);
+            } else {
+                showMessage("❌ Invalid Username or Password", "error");
+            }
+        }
+
+        /* ================= ENTER KEY SUPPORT ================= */
+        document.addEventListener("keydown", (e) => {
+            if (e.key === "Enter") login();
+        });
+    </script>
+
+</body>
+</html>
